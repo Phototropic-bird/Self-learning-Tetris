@@ -71,6 +71,8 @@ void MowerEffect(); //index : 4
 void ClassmateEffect(); //index : 5
 bool NukeEffect(); //index : 6
 
+void defTextures(); //define textures according to the gamemode
+
 
 //Sounds
 
@@ -160,19 +162,10 @@ const sf::Font fonts[1] =
 {
     sf::Font("BAUHS93.ttf")
 };
+
 //textures
-const sf::Texture textures[9] = 
-{
-    sf::Texture("tiles.jpg", false, sf::IntRect({0,0}, {472,472})),
-    sf::Texture("Sand.jpg", false, sf::IntRect({0,0}, {472,472})),
-    sf::Texture("Blackhole.jpg", false, sf::IntRect({0,0},{472,472})),
-    sf::Texture("Boson.jpg", false, sf::IntRect({0,0},{472,472})),
-    sf::Texture("Mower.jpg", false, sf::IntRect({0,0},{472,472})),
-    sf::Texture("Classmate.jpg", false, sf::IntRect({0,0}, {480,472})),
-    sf::Texture("Nuke sign.png", false, sf::IntRect({0,0}, {600,600})),
-    sf::Texture("Activated Nuke.png", false, sf::IntRect({0,0}, {507,507})),  //activated nuke  //7
-    sf::Texture("Boom image.jpg", false, sf::IntRect({0,0}, {416,416}))  //Boom of nuke //8
-};
+std::vector<sf::Texture> textures;
+sf::Texture recIni("tiles_S.jpg");
 
 //about drawings
     //window
@@ -182,7 +175,7 @@ const sf::Texture textures[9] =
     sf::Color lattice_color = sf::Color(255,255,255, 120);
     float line_thickness = 3.f;    //in pixels
         //MyObject
-    sf::Sprite rec(textures[5]);    // rec size = the initial given texture Intrec
+    sf::Sprite rec(recIni);    // rec size = the initial given texture Intrec
     sf::Vector2f school_scale;
     sf::RectangleShape Shadow_rec;
     sf::Color shadowColor = sf::Color(0, 200, 0, 70);
@@ -240,6 +233,7 @@ int main(){
         //人不太可能在從上方if句到下方choosegamemode之間的時間內進入方塊，所以在外面壓移進方塊不太會產生錯誤判斷
         if(Gamemode == -1){
             ChooseGamemode();
+            defTextures(); //define textures according to the gamemode
             IniALL();
         }
 
@@ -392,16 +386,16 @@ int main(){
             if(dropped){     
                 score += 10;
                 /******  Anchoring EFFECTS  *****/  //effects that happen upon anchoring
-                if(curObj->getKind()==5) ClassmateEffect(); //做高宥翔
-                else if(curObj->getKind()==3) BosonEffect(); //do boson
-                else if(curObj->getKind()==4) MowerEffect(); //do mower
+                if(curObj->getKind()==5 && Gamemode==0) ClassmateEffect(); //做高宥翔
+                else if(curObj->getKind()==3 && Gamemode==0) BosonEffect(); //do boson
+                else if(curObj->getKind()==4 && Gamemode==0) MowerEffect(); //do mower
                 anchoring(curObj);
                 bool rpt = 0; //阻止if_change斷combo
                 do{
                     if_change = 0;
                     /******  Lasting EFFECTS  *****/
-                    if_change = SandEffect();   //paralyze temporarily
-                    if_change = BlackholeEffect();  //paralyze temporarily
+                    if(Gamemode == 0) if_change = SandEffect();   //paralyze temporarily
+                    if(Gamemode == 0) if_change = BlackholeEffect();  //paralyze temporarily
                     /******  Clean Lines  *****/
                     CheckIfClean();
                     GiveFeedback(rpt);
@@ -409,7 +403,7 @@ int main(){
                         alpha = 255;
                         if_change = 1;
                         LineClean();    //paralyze temporarily
-                        NukeEffect();   //paralyze temporarily
+                        if(Gamemode == 0) NukeEffect();   //paralyze temporarily
                         fixVisBcBk();
                         lineToClean.clear();
                     }else if(t_spin){   //消0行但有T_spin
@@ -525,7 +519,7 @@ void IniNxandBagandGenre(){
     //initiate the genre
     genre.clear();
     if(Gamemode == 0)
-    genre = {0,1,2,3,4,5,6,0,1,2,3,4,5,6};
+    genre = {0,1,5,0,1,5,0,1,5,0,1,5,0,1};
     else
     for(int i=0; i<2; i++) for(int j=genrAmo-1; j>=0; j--) genre.push_back(0);
 
@@ -583,11 +577,9 @@ void anchoring(MyObject *oj){   //以Object的shadow center 登入物件
         if(curObj->getKind() == 6){ //核彈在anchoring 時不能進到active bank
             vis[its_y*(rows+2)+its_x] = 6;
             blockCount[its_y] ++ ; 
-        }else SigninOj(curObj->getKind(), {its_x, its_y}); //cleaning effect don't have to sign in when anchoring
+        }else SigninOj((Gamemode == 0 ? curObj->getKind() : curObj->getShape()), {its_x, its_y}); //cleaning effect don't have to sign in when anchoring
     }
 }
-
-
 
 void CheckIfClean(){    //推入lineToClean
     for(int i=1; i<colums+5; i++){
@@ -604,7 +596,7 @@ void LineClean(){   //paralyze temporarily
                     int lf = v*(rows+2)+rows/2-c;
                     int rh = v*(rows+2)+rows/2+1+c;
                     //  DEBANKING or Activate clean effects
-                    if(vis[lf] == 6){   //在activate nuke時再 push 就好
+                    if(vis[lf] == 6 && Gamemode==0){   //在activate nuke時再 push 就好
 
                         //nuke ini sound effect
                         sd.setBuffer(nk_ini_sound);
@@ -613,7 +605,7 @@ void LineClean(){   //paralyze temporarily
                         AcNkbank.push_back({rows/2-c, v});
                     }else SignoutOj(vis[lf], {rows/2-c, v});
                     
-                    if(vis[rh] == 6){   //在activate nuke時再 push 就好
+                    if(vis[rh] == 6 && Gamemode==0){   //在activate nuke時再 push 就好
 
                         //nuke ini sound effect
                         sd.setBuffer(nk_ini_sound);
@@ -656,9 +648,9 @@ void fixVisBcBk(){
 void SigninOj(int index, std::pair<int,int> pos){   //in anchoring
 
     //lasting object and clean object need to be put into set (bank)
-    if(index==1) Sdbank.push_back(pos);
-    else if(index==2)BHbank.push_back(pos);
-    else if(index==6) AcNkbank.push_back(pos);
+    if(index==1 && Gamemode==0) Sdbank.push_back(pos);
+    else if(index==2 && Gamemode==0)BHbank.push_back(pos);
+    else if(index==6 && Gamemode==0) AcNkbank.push_back(pos);
 
     vis[pos.second*(rows+2)+pos.first] = index;
     blockCount[pos.second]++;
@@ -1086,8 +1078,8 @@ void DrawMovingOj(){  //curObj, current shape and its shadow
     auto oj = curObj->getBrick();
     curObj->caculateDownShadow();
     auto shd = curObj->getShadow();
-    int its_kind = curObj->getKind();
-    rec.setTexture(textures[its_kind]);
+    int its_tx = (Gamemode == 0 ? curObj->getKind() : curObj->getShape());
+    rec.setTexture(textures[its_tx]);
     //draw MyObject
     for(auto p : oj){
         int its_x = p.first;
@@ -1108,7 +1100,9 @@ void DrawNextOj(){ //next Obj, nxOb.front()
     for(int i=0; i<nextAmo; i++){
         auto p = nxOb.front();
         MyObject nextOj(p.first, p.second, rows, colums, vis);
-        rec.setTexture(textures[p.second]);
+        int its_tx = (Gamemode == 0 ? p.second : p.first);
+        rec.setTexture(textures[its_tx]);
+
         auto vc = nextOj.getBrick();
         for(auto g : vc){
             rec.setPosition({origin_x + (rows + 5 + g.first)*size_of_brick
@@ -1126,7 +1120,8 @@ void DrawNextOj(){ //next Obj, nxOb.front()
 void DrawHoldOj(){ //draw held MyObject
     if(holdInfo.first == -1) return;
     MyObject holdOj(holdInfo.first, holdInfo.second, rows, colums, vis);
-    rec.setTexture(textures[holdInfo.second]);
+    int its_tx = (Gamemode == 0 ? holdInfo.second : holdInfo.first);
+    rec.setTexture(textures[its_tx]);
     auto vc = holdOj.getBrick();
     for(auto p : vc){
         rec.setPosition({origin_x + (-9 + p.first)*size_of_brick, origin_y + (-2 + p.second)*size_of_brick});
@@ -1221,4 +1216,34 @@ void PrintLoseState(){
     losss.setPosition({(float)window_w/2, window_h/2  + (float)losss.getCharacterSize()});
     window.draw(losss);
     window.display();
+}
+void defTextures(){
+    textures.resize(9);
+    if(Gamemode == 0){
+        textures = 
+        {
+            sf::Texture("tiles_S.jpg", false, sf::IntRect({0,0}, {472,472})),
+            sf::Texture("Sand.jpg", false, sf::IntRect({0,0}, {472,472})),
+            sf::Texture("Blackhole.jpg", false, sf::IntRect({0,0},{472,472})),
+            sf::Texture("Boson.jpg", false, sf::IntRect({0,0},{472,472})),
+            sf::Texture("Mower.jpg", false, sf::IntRect({0,0},{472,472})),
+            sf::Texture("Classmate.jpg", false, sf::IntRect({0,0}, {480,472})),
+            sf::Texture("Nuke sign.png", false, sf::IntRect({0,0}, {600,600})),
+            sf::Texture("Activated Nuke.png", false, sf::IntRect({0,0}, {507,507})),  //activated nuke  //7
+            sf::Texture("Boom image.jpg", false, sf::IntRect({0,0}, {416,416}))  //Boom of nuke //8
+        };
+    }else if(Gamemode == 1){
+        textures = 
+        {
+            sf::Texture("tiles_S.jpg", false, sf::IntRect({0,0}, {472,472})),
+            sf::Texture("tiles_Z.jpg", false, sf::IntRect({0,0}, {472,472})),
+            sf::Texture("tiles_T.jpg", false, sf::IntRect({0,0}, {472,472})),
+            sf::Texture("tiles_O.jpg", false, sf::IntRect({0,0}, {472,472})),
+            sf::Texture("tiles_L.jpg", false, sf::IntRect({0,0}, {472,472})),
+            sf::Texture("tiles_J.jpg", false, sf::IntRect({0,0}, {472,472})),
+            sf::Texture("tiles_I.jpg", false, sf::IntRect({0,0}, {472,472})),
+            sf::Texture("tiles_S.jpg", false, sf::IntRect({0,0}, {472,472})),
+            sf::Texture("tiles_S.jpg", false, sf::IntRect({0,0}, {472,472})),
+        };
+    }
 }
