@@ -1,7 +1,7 @@
 # Self-learning-Tetris
 My high school self-learning Tetris project (Using SFML)
 
-Here's my game: <br>
+Click here to download my game: <br>
 https://drive.google.com/file/d/17hxoGtixECR0-x-8-Dl7EO3D02iR970Q/view?usp=drive_link
 --
 ### OPERATION
