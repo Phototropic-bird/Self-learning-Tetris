@@ -17,6 +17,5 @@ Click here to download my game: <br>
 * R to restart the game
 * P to pause the gam (only works when piece is not yet dropped)
 
---
 ### Special mode (in chinese)
 ![image](https://github.com/user-attachments/assets/2e9b1f2d-eb2e-4fbe-847b-ab917252767b)
